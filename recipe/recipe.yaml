@@ -32,6 +32,15 @@ tests:
       python_version:
         - ${{ python_min }}.*
         - "*"
+  - script:
+      # test_read_and_length.py is broken with modern pytest
+      - pytest --pyargs dbfread --deselect=test_read_and_length.py
+    requirements:
+      run:
+        - pytest
+    files:
+      source:
+        - testcases/
 
 about:
   summary: Read DBF Files with Python
