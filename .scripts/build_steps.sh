@@ -103,7 +103,7 @@ build)
     ;;
 
 upload)
-    if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
+    if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" != 1 ]]; then
         ( startgroup "Validating outputs" ) 2> /dev/null
 
         validate_recipe_outputs "${FEEDSTOCK_NAME}"
@@ -116,6 +116,11 @@ upload)
 
         ( endgroup "Uploading packages" ) 2> /dev/null
     fi
+    ;;
+
+*)
+    echo "Invalid STEP_ACTION: ${STEP_ACTION}" >&2
+    exit 1
     ;;
 esac
 
