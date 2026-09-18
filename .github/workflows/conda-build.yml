@@ -157,4 +157,4 @@ jobs:
       if: ${{ always() && steps.determine-status.outputs.status == 'success' && matrix.UPLOAD_PACKAGES }}
       shell: bash
       run:
-        echo $
+        echo ${{ github.event_name }}
