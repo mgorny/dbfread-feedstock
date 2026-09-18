@@ -154,7 +154,7 @@ jobs:
         echo "status=$STATUS" >> $GITHUB_OUTPUT
 
     - name: Upload packages
-      if: ${{ always() && steps.determine-status.outputs.status == 'success' && matrix.UPLOAD_PACKAGES && github.event_name == 'pull_request' }}
+      if: ${{ always() && steps.determine-status.outputs.status == 'success' && matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
       shell: bash
       run:
         echo "Ohai again"
