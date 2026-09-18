@@ -60,11 +60,11 @@ if [[ "${CI:-}" != "" ]]; then
 fi
 
 if [[ "${CI:-}" != "" ]]; then
-  echo -e "\n\nMangling homebrew in the CI to avoid conflicts."
+  echo "Mangling homebrew in the CI to avoid conflicts."
   /usr/bin/sudo mangle_homebrew
   /usr/bin/sudo -k
 else
-  echo -e "\n\nNot mangling homebrew as we are not running in CI"
+  echo "Not mangling homebrew as we are not running in CI"
 fi
 
 if [[ "${sha:-}" == "" ]]; then
