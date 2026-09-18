@@ -10,3 +10,7 @@ noarch_platforms:
   - linux_aarch64
   - osx_64
   - osx_arm64
+provider:
+  linux_aarch64: github_actions
+  osx_64: github_actions
+  osx_arm64: github_actions
