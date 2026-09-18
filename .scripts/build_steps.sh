@@ -53,64 +53,71 @@ make_build_number "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
 
 ( endgroup "Configuring conda" ) 2> /dev/null
 
-if [[ -f "${FEEDSTOCK_ROOT}/LICENSE.txt" ]]; then
-  cp "${FEEDSTOCK_ROOT}/LICENSE.txt" "${RECIPE_ROOT}/recipe-scripts-license.txt"
-fi
-
-if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
-    # differences between conda-build vs. rattler-build
-    #   - 1 step (conda debug + manually open shell) vs. 2 step (rb debug {setup, shell})
-    #   - recipe is positional vs. --recipe "${RECIPE_ROOT}"
-    #   - --output-id vs. --output-name
-    #   - --clobber-file vs. none
-    #   - none vs. --target-platform
-    export CONDA_BLD_PATH="${CONDA_BLD_PATH:-${FEEDSTOCK_ROOT}/build_artifacts}"
-    rattler-build debug setup \
-        --recipe "${RECIPE_ROOT}" \
-        -m "${CI_SUPPORT}/${CONFIG}.yaml" \
-        ${EXTRA_CB_OPTIONS:-} \
-        ${BUILD_OUTPUT_ID:+--output-name "${BUILD_OUTPUT_ID}"} \
-        --build-platform "${BUILD_PLATFORM}" \
-        --target-platform "${HOST_PLATFORM}"
-
-    rattler-build debug shell
-else
-    # differences between conda-build vs. rattler-build
-    #   - recipe is positional vs. --recipe "${RECIPE_ROOT}"
-    #   - --suppress-variables vs. none
-    #   - --clobber-file vs. none
-    #   - none vs. --target-platform
-    #   - --extra-meta a=b c=d vs. --extra-meta a=b --extra-meta c=d
-
-    rattler-build build \
-        --recipe "${RECIPE_ROOT}" \
-        -m "${CI_SUPPORT}/${CONFIG}.yaml" \
-        ${EXTRA_CB_OPTIONS:-} \
-        --build-platform "${BUILD_PLATFORM}" \
-        --target-platform "${HOST_PLATFORM}" \
-        --extra-meta flow_run_id="${flow_run_id:-}" \
-        --extra-meta remote_url="${remote_url:-}" \
-        --extra-meta sha="${sha:-}"
-    ( startgroup "Inspecting artifacts" ) 2> /dev/null
-
-    # inspect_artifacts was only added in conda-forge-ci-setup 4.9.4
-    command -v inspect_artifacts >/dev/null 2>&1 && inspect_artifacts --recipe-dir "${RECIPE_ROOT}" -m "${CONFIG_FILE}" || echo "inspect_artifacts needs conda-forge-ci-setup >=4.9.4"
-
-    ( endgroup "Inspecting artifacts" ) 2> /dev/null
-    ( startgroup "Validating outputs" ) 2> /dev/null
-
-    validate_recipe_outputs "${FEEDSTOCK_NAME}"
-
-    ( endgroup "Validating outputs" ) 2> /dev/null
-
-    ( startgroup "Uploading packages" ) 2> /dev/null
-
-    if [[ "${UPLOAD_PACKAGES}" != "False" ]] && [[ "${IS_PR_BUILD}" == "False" ]]; then
-        upload_package --validate --feedstock-name="${FEEDSTOCK_NAME}"  "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
+case ${STEP_ACTION} in
+build)
+    if [[ -f "${FEEDSTOCK_ROOT}/LICENSE.txt" ]]; then
+        cp "${FEEDSTOCK_ROOT}/LICENSE.txt" "${RECIPE_ROOT}/recipe-scripts-license.txt"
     fi
 
-    ( endgroup "Uploading packages" ) 2> /dev/null
-fi
+    if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
+        # differences between conda-build vs. rattler-build
+        #   - 1 step (conda debug + manually open shell) vs. 2 step (rb debug {setup, shell})
+        #   - recipe is positional vs. --recipe "${RECIPE_ROOT}"
+        #   - --output-id vs. --output-name
+        #   - --clobber-file vs. none
+        #   - none vs. --target-platform
+        export CONDA_BLD_PATH="${CONDA_BLD_PATH:-${FEEDSTOCK_ROOT}/build_artifacts}"
+        rattler-build debug setup \
+            --recipe "${RECIPE_ROOT}" \
+            -m "${CI_SUPPORT}/${CONFIG}.yaml" \
+            ${EXTRA_CB_OPTIONS:-} \
+            ${BUILD_OUTPUT_ID:+--output-name "${BUILD_OUTPUT_ID}"} \
+            --build-platform "${BUILD_PLATFORM}" \
+            --target-platform "${HOST_PLATFORM}"
+
+        rattler-build debug shell
+    else
+        # differences between conda-build vs. rattler-build
+        #   - recipe is positional vs. --recipe "${RECIPE_ROOT}"
+        #   - --suppress-variables vs. none
+        #   - --clobber-file vs. none
+        #   - none vs. --target-platform
+        #   - --extra-meta a=b c=d vs. --extra-meta a=b --extra-meta c=d
+
+        rattler-build build \
+            --recipe "${RECIPE_ROOT}" \
+            -m "${CI_SUPPORT}/${CONFIG}.yaml" \
+            ${EXTRA_CB_OPTIONS:-} \
+            --build-platform "${BUILD_PLATFORM}" \
+            --target-platform "${HOST_PLATFORM}" \
+            --extra-meta flow_run_id="${flow_run_id:-}" \
+            --extra-meta remote_url="${remote_url:-}" \
+            --extra-meta sha="${sha:-}"
+        ( startgroup "Inspecting artifacts" ) 2> /dev/null
+
+        # inspect_artifacts was only added in conda-forge-ci-setup 4.9.4
+        command -v inspect_artifacts >/dev/null 2>&1 && inspect_artifacts --recipe-dir "${RECIPE_ROOT}" -m "${CONFIG_FILE}" || echo "inspect_artifacts needs conda-forge-ci-setup >=4.9.4"
+
+        ( endgroup "Inspecting artifacts" ) 2> /dev/null
+    fi
+    ;;
+
+upload)
+    if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
+        ( startgroup "Validating outputs" ) 2> /dev/null
+
+        validate_recipe_outputs "${FEEDSTOCK_NAME}"
+
+        ( endgroup "Validating outputs" ) 2> /dev/null
+
+        ( startgroup "Uploading packages" ) 2> /dev/null
+
+        upload_package --validate --feedstock-name="${FEEDSTOCK_NAME}"  "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
+
+        ( endgroup "Uploading packages" ) 2> /dev/null
+    fi
+    ;;
+esac
 
 ( startgroup "Final checks" ) 2> /dev/null
 
