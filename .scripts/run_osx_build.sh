@@ -8,55 +8,93 @@
 # -*- mode: jinja-shell -*-
 
 set -xeuo pipefail
-export FEEDSTOCK_ROOT="${FEEDSTOCK_ROOT:-/home/conda/feedstock_root}"
+export FEEDSTOCK_ROOT=.
 source ${FEEDSTOCK_ROOT}/.scripts/logging_utils.sh
 
 
-( endgroup "Start Docker" ) 2> /dev/null
-
 ( startgroup "Configuring build environment" ) 2> /dev/null
 
-export PYTHONUNBUFFERED=1
-export RECIPE_ROOT="${RECIPE_ROOT:-/home/conda/recipe_root}"
+MINIFORGE_HOME="${MINIFORGE_HOME:-${HOME}/miniforge3}"
+MINIFORGE_HOME="${MINIFORGE_HOME%/}" # remove trailing slash
+export CONDA_BLD_PATH="${CONDA_BLD_PATH:-${MINIFORGE_HOME}/conda-bld}"
+export RECIPE_ROOT="recipe"
 export CI_SUPPORT="${FEEDSTOCK_ROOT}/.ci_support"
 export CONFIG_FILE="${CI_SUPPORT}/${CONFIG}.yaml"
-export RATTLER_CACHE_DIR="${FEEDSTOCK_ROOT}/build_artifacts/pkg_cache"
-
-cat >~/.condarc <<CONDARC
-
-conda-build:
-  root-dir: ${FEEDSTOCK_ROOT}/build_artifacts
-pkgs_dirs:
-  - ${FEEDSTOCK_ROOT}/build_artifacts/pkg_cache
-  - /opt/conda/pkgs
-solver: libmamba
-
-CONDARC
 
 ( startgroup "Provisioning base env with micromamba" ) 2> /dev/null
-mv /opt/conda/conda-meta/history /opt/conda/conda-meta/history.$(date +%Y-%m-%d-%H-%M-%S)
-echo > /opt/conda/conda-meta/history
-micromamba install --root-prefix ~/.conda --prefix /opt/conda \
-    --yes --override-channels --channel conda-forge --strict-channel-priority \
-    pip  rattler-build conda-forge-ci-setup=4 "conda-build>=26.3"
+MICROMAMBA_VERSION="1.5.10-0"
+if [[ "$(uname -m)" == "arm64" ]]; then
+  osx_arch="osx-arm64"
+else
+  osx_arch="osx-64"
+fi
+MICROMAMBA_URL="https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${osx_arch}"
+MAMBA_ROOT_PREFIX="${MINIFORGE_HOME}-micromamba-$(date +%s)"
+echo "Downloading micromamba ${MICROMAMBA_VERSION}"
+micromamba_exe="$(mktemp -d)/micromamba"
+curl -L -o "${micromamba_exe}" "${MICROMAMBA_URL}"
+chmod +x "${micromamba_exe}"
+echo "Creating environment"
+"${micromamba_exe}" create --yes --root-prefix "${MAMBA_ROOT_PREFIX}" --prefix "${MINIFORGE_HOME}" \
+  --channel conda-forge \
+  pip rattler-build conda-forge-ci-setup=4 "conda-build>=26.3"
+echo "Moving pkgs cache from ${MAMBA_ROOT_PREFIX} to ${MINIFORGE_HOME}"
+mv "${MAMBA_ROOT_PREFIX}/pkgs" "${MINIFORGE_HOME}"
+echo "Cleaning up micromamba"
+rm -rf "${MAMBA_ROOT_PREFIX}" "${micromamba_exe}" || true
 ( endgroup "Provisioning base env with micromamba" ) 2> /dev/null
 
 ( startgroup "Configuring conda" ) 2> /dev/null
+echo "Activating environment"
+source "${MINIFORGE_HOME}/etc/profile.d/conda.sh"
+conda activate base
+export CONDA_SOLVER="libmamba"
 export CONDA_LIBMAMBA_SOLVER_NO_CHANNELS_FROM_INSTALLED=1
+
 
 # set up the condarc
 setup_conda_rc "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
+
+if [[ "${CI:-}" != "" ]]; then
+  mangle_compiler "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
+fi
+
+if [[ "${CI:-}" != "" ]]; then
+  echo -e "\n\nMangling homebrew in the CI to avoid conflicts."
+  /usr/bin/sudo mangle_homebrew
+  /usr/bin/sudo -k
+else
+  echo -e "\n\nNot mangling homebrew as we are not running in CI"
+fi
+
+if [[ "${sha:-}" == "" ]]; then
+  sha=$(git rev-parse HEAD)
+fi
+
+if [[ "${OSX_SDK_DIR:-}" == "" ]]; then
+  if [[ "${CI:-}" == "" ]]; then
+    echo "Please set OSX_SDK_DIR to a directory where SDKs can be downloaded to. Aborting"
+    exit 1
+  else
+    export OSX_SDK_DIR=/opt/conda-sdks
+    /usr/bin/sudo mkdir -p "${OSX_SDK_DIR}"
+    /usr/bin/sudo chown "${USER}" "${OSX_SDK_DIR}"
+  fi
+else
+  if tmpf=$(mktemp "$OSX_SDK_DIR"/tmp.XXXXXXXX 2>/dev/null); then
+      rm -f "$tmpf"
+      echo "OSX_SDK_DIR is writeable without sudo, continuing"
+  else
+      echo "User-provided OSX_SDK_DIR is not writeable for current user! Aborting"
+      exit 1
+  fi
+fi
 
 source run_conda_forge_build_setup
 
 
 
-
-
 ( endgroup "Configuring conda" ) 2> /dev/null
-
-# make the build number clobber
-make_build_number "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
 
 if [[ -f "${FEEDSTOCK_ROOT}/LICENSE.txt" ]]; then
   cp "${FEEDSTOCK_ROOT}/LICENSE.txt" "${RECIPE_ROOT}/recipe-scripts-license.txt"
@@ -116,7 +154,3 @@ else
 
     ( endgroup "Uploading packages" ) 2> /dev/null
 fi
-
-( startgroup "Final checks" ) 2> /dev/null
-
-touch "${FEEDSTOCK_ROOT}/build_artifacts/conda-forge-build-done-${CONFIG}"
