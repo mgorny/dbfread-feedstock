@@ -5,3 +5,13 @@ github:
 conda_build:
   pkg_format: '2'
 conda_build_tool: rattler-build
+provider:
+  linux_aarch64: default
+  osx_64: github_actions
+  osx_arm64: github_actions
+noarch_platforms:
+  - linux_64
+  - linux_aarch64
+  - osx_64
+  - osx_arm64
+  - win_64
