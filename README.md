@@ -9,10 +9,6 @@ Package license: MIT
 
 Summary: Read DBF Files with Python
 
-Development: https://github.com/olemb/dbfread
-
-Documentation: https://dbfread.readthedocs.io/
-
 Current build status
 ====================
 
@@ -193,5 +189,4 @@ Feedstock Maintainers
 =====================
 
 * [@mgorny](https://github.com/mgorny/)
-* [@pmlandwehr](https://github.com/pmlandwehr/)
 
