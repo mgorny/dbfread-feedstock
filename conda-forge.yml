@@ -4,7 +4,6 @@ github:
   tooling_branch_name: main
 conda_build:
   pkg_format: '2'
-conda_build_tool: rattler-build
 provider:
   linux_aarch64: default
   osx_64: github_actions
