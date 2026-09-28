@@ -27,6 +27,11 @@ export RATTLER_CACHE_DIR="${CONDA_BLD_PATH}/pkg_cache"
 
 ( endgroup "Configuring build environment" ) 2> /dev/null
 
+arch=$(uname -m)
+if [[ "${arch}" == "x86_64" ]]; then
+  arch="64"
+fi
+
 ( startgroup "Provisioning base env with pixi" ) 2> /dev/null
 
 echo Installing pixi
@@ -36,10 +41,6 @@ export PATH="~/.pixi/bin:$PATH"
 pushd "${FEEDSTOCK_ROOT}"
 echo Installing environment
 mkdir -p "${MINIFORGE_HOME}"
-arch=$(uname -m)
-if [[ "$arch" == "x86_64" ]]; then
-  arch="64"
-fi
 PIXI_ENV=build
 sed -i.bak "s/platforms = .*/platforms = [\"osx-${arch}\"]/" pixi.toml
 pixi install --environment "${PIXI_ENV}"

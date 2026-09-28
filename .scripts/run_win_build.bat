@@ -26,6 +26,9 @@ set RECIPE_ROOT=%FEEDSTOCK_ROOT%\recipe
 set CI_SUPPORT=%FEEDSTOCK_ROOT%\.ci_support
 set CONFIG_FILE=%CI_SUPPORT%\%CONFIG%.yaml
 
+set "arch=64"
+if "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "arch=arm64"
+
 call :start_group "Provisioning base env with pixi"
 
 echo Installing pixi
@@ -41,8 +44,6 @@ if "%PIXI_CACHE_DIR%"=="%MINIFORGE_HOME%" (
 ) else (
     pushd "%REPO_ROOT%"
 )
-set "arch=64"
-if "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "arch=arm64"
 set PIXI_ENV=build
 move /y pixi.toml pixi.toml.bak
 powershell -NoProfile -ExecutionPolicy unrestricted -Command "(Get-Content pixi.toml.bak -Encoding UTF8) -replace 'platforms = .*', 'platforms = [''win-%arch%'']' | Out-File pixi.toml -Encoding UTF8"
@@ -100,7 +101,6 @@ rattler-build.exe build ^
     --recipe "%RECIPE_ROOT%" ^
     -m %CONFIG_FILE% ^
     %EXTRA_CB_OPTIONS% ^
-    --build-platform %BUILD_PLATFORM% ^
     --target-platform %HOST_PLATFORM%
 
 if !errorlevel! neq 0 exit /b !errorlevel!
