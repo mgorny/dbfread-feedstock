@@ -27,16 +27,16 @@ export RATTLER_CACHE_DIR="${CONDA_BLD_PATH}/pkg_cache"
 
 ( endgroup "Configuring build environment" ) 2> /dev/null
 
+arch=$(uname -m)
+if [[ "${arch}" == "x86_64" ]]; then
+  arch="64"
+fi
+
 ( startgroup "Provisioning base env with micromamba" ) 2> /dev/null
 
 MAMBA_ROOT_PREFIX="${MINIFORGE_HOME}-micromamba-$(date +%s)"
-MICROMAMBA_VERSION="1.5.10-0"
-if [[ "$(uname -m)" == "arm64" ]]; then
-    osx_arch="osx-arm64"
-else
-    osx_arch="osx-64"
-fi
-MICROMAMBA_URL="https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-${osx_arch}"
+MICROMAMBA_VERSION="2.9.0-0"
+MICROMAMBA_URL="https://github.com/mamba-org/micromamba-releases/releases/download/${MICROMAMBA_VERSION}/micromamba-osx-${arch}"
 MICROMAMBA_TMPDIR=$(mktemp -d)
 MICROMAMBA_EXE=${MICROMAMBA_TMPDIR}/micromamba
 
