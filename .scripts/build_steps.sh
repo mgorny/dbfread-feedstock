@@ -74,9 +74,6 @@ source run_conda_forge_build_setup
 
 ( endgroup "Configuring conda" ) 2> /dev/null
 
-# make the build number clobber
-make_build_number "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
-
 if [[ -f "${FEEDSTOCK_ROOT}/LICENSE.txt" ]]; then
     echo Copying feedstock license
     cp "${FEEDSTOCK_ROOT}/LICENSE.txt" "${RECIPE_ROOT}/recipe-scripts-license.txt"

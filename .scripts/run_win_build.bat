@@ -22,11 +22,14 @@ set RECIPE_ROOT=%FEEDSTOCK_ROOT%\recipe
 set CI_SUPPORT=%FEEDSTOCK_ROOT%\.ci_support
 set CONFIG_FILE=%CI_SUPPORT%\%CONFIG%.yaml
 
+set "arch=64"
+if "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "arch=arm64"
+
 call :start_group "Provisioning base env with micromamba"
 
 set "MAMBA_ROOT_PREFIX=%MINIFORGE_HOME%-micromamba-%RANDOM%"
-set "MICROMAMBA_VERSION=1.5.10-0"
-set "MICROMAMBA_URL=https://github.com/mamba-org/micromamba-releases/releases/download/%MICROMAMBA_VERSION%/micromamba-win-64"
+set "MICROMAMBA_VERSION=2.9.0-0"
+set "MICROMAMBA_URL=https://github.com/mamba-org/micromamba-releases/releases/download/%MICROMAMBA_VERSION%/micromamba-win-%arch%"
 set "MICROMAMBA_TMPDIR=%TMP%\micromamba-%RANDOM%"
 set "MICROMAMBA_EXE=%MICROMAMBA_TMPDIR%\micromamba.exe"
 
@@ -80,8 +83,6 @@ if NOT [%flow_run_id%] == [] (
 
 :: Build the recipe
 echo Building recipe
-set "_OLD_CONDA_SUBDIR=%CONDA_SUBDIR%"
-set "CONDA_SUBDIR=%BUILD_PLATFORM%"
 
 conda-build.exe ^
     "%RECIPE_ROOT%" ^
@@ -90,8 +91,6 @@ conda-build.exe ^
     --suppress-variables
 
 if !errorlevel! neq 0 exit /b !errorlevel!
-set "_OLD_CONDA_SUBDIR="
-set "CONDA_SUBDIR=%_OLD_CONDA_SUBDIR%"
 
 call :start_group "Inspecting artifacts"
 
