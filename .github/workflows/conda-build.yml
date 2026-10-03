@@ -226,8 +226,6 @@ jobs:
 
     - name: Download conda build artifacts
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}
 
     - name: Upload packages
       if: ${{ matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
