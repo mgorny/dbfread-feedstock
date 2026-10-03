@@ -194,7 +194,6 @@ jobs:
       with:
         name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}
         path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
-        retention-days: 14
         archive: false
       continue-on-error: true
 
