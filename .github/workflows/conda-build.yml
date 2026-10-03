@@ -151,7 +151,7 @@ jobs:
       id: prepare-artifacts
       shell: bash
       # we do not want to trigger artefact creation if the build was cancelled
-      if: ${{ always() && steps.determine-status.outputs.status != 'cancelled' && matrix.STORE_BUILD_ARTIFACTS }}
+      if: ${{ always() && steps.determine-status.outputs.status != 'cancelled' }}
       env:
         CI: github_actions
         CONDA_BLD_PATH: ${{ matrix.build_workspace_dir }}
@@ -160,6 +160,7 @@ jobs:
         JOB_STATUS: ${{ steps.determine-status.outputs.status }}
         MINIFORGE_HOME: ${{ matrix.tools_install_dir }}
         OS: ${{ matrix.os }}
+        STORE_BUILD_ARTIFACTS: ${{ matrix.STORE_BUILD_ARTIFACTS }}%{ endraw %}
       run: |
         export ARTIFACT_STAGING_DIR="$GITHUB_WORKSPACE"
         export CI_RUN_ID=$GITHUB_RUN_ID
@@ -171,7 +172,13 @@ jobs:
         # Use different prefix for successful and failed build artifacts
         # so random failures don't prevent rebuilds from creating artifacts.
         if [ $JOB_STATUS == "failure" ]; then
-          exit 0
+          if [[ ${STORE_BUILD_ARTIFACTS} == True ]]; then
+            export BLD_ARTIFACT_PREFIX="conda_pkgs_failed"
+            export ENV_ARTIFACT_PREFIX="conda_envs"
+            export WRK_ARTIFACT_PREFIX="conda_work"
+          else
+            exit 0
+          fi
         else
           export BLD_ARTIFACT_PREFIX="conda_pkgs"
         fi
@@ -183,7 +190,7 @@ jobs:
 
     - name: Store conda build artifacts
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: ${{ always() && steps.prepare-artifacts.outcome == 'success' && steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH != '' }}
+      if: {% raw %}${{ always() && steps.prepare-artifacts.outcome == 'success' && steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH != '' }}
       with:
         name: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_NAME }}
         path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
