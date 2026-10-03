@@ -126,9 +126,7 @@ jobs:
 
   upload:
     name: ${{ matrix.CONFIG }}-upload
-    needs:
-      - linux_64_
-
+    needs: build
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 360
     strategy:
