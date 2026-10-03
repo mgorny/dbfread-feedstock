@@ -124,30 +124,34 @@ jobs:
         FEEDSTOCK_TOKEN: ${{ secrets.FEEDSTOCK_TOKEN }}
         STAGING_BINSTAR_TOKEN: ${{ secrets.STAGING_BINSTAR_TOKEN }}
 
-    - name: Determine build outcome
-      # this is to merge the status of the linux/osx/win builds into
-      # something we can easily reuse during artefact generation
-      id: determine-status
-      if: ${{ always() }}
-      shell: bash
-      env:
-        OS: ${{ matrix.os }}
-      run: |
-        if [[ "$OS" == "ubuntu" ]]; then
-          STATUS=${{ steps.build-linux.outcome }}
-        elif [[ "$OS" == "macos" ]]; then
-          STATUS=${{ steps.build-macos.outcome }}
-        elif [[ "$OS" == "windows" ]]; then
-          STATUS=${{ steps.build-windows.outcome }}
-        fi
-        if [ -z "$STATUS" ]; then
-          # steps that never ran will have empty status
-          STATUS="cancelled"
-        fi
-        echo "status=$STATUS" >> $GITHUB_OUTPUT
+  upload:
+    name: ${{ matrix.CONFIG }}-upload
+    runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 50
+      matrix:
+        include:
+          - CONFIG: linux_64_
+            DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:alma10
+            STORE_BUILD_ARTIFACTS: False
+            UPLOAD_PACKAGES: True
+            build_workspace_dir: build_artifacts
+            docker_run_args: 
+            free_disk_space: skip
+            os: ubuntu
+            pagefile_size: 0
+            resize_partitions: False
+            runs_on: ['ubuntu-latest']
+            tools_install_dir: ~/miniforge3
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Upload packages
-      if: ${{ always() && steps.determine-status.outputs.status == 'success' && matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
+      if: ${{ always() && matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
       shell: bash
       env:
         CI: github_actions
