@@ -84,7 +84,7 @@ source run_conda_forge_build_setup
 
 ( endgroup "Configuring conda" ) 2> /dev/null
 
-source "${RUN_SCRIPT}"
+source "${FEEDSTOCK_ROOT}/.scripts/${RUN_SCRIPT}"
 
 ( startgroup "Leaving the Docker container" ) 2> /dev/null
 
