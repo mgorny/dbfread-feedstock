@@ -194,8 +194,6 @@ jobs:
       with:
         name: test_arti
         path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
-        retention-days: 14
-        archive: false
       continue-on-error: true
 
   upload:
