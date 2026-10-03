@@ -126,6 +126,7 @@ jobs:
 
   upload:
     name: ${{ matrix.CONFIG }}-upload
+    needs: ${{ matrix.CONFIG }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 360
     strategy:
