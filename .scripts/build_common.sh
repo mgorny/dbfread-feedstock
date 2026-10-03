@@ -42,7 +42,7 @@ echo Building recipe
 #   - none vs. --target-platform
 #   - --extra-meta a=b c=d vs. --extra-meta a=b --extra-meta c=d
 
- \
+rattler-build build \
     --recipe "${RECIPE_ROOT}" \
     -m "${CONFIG_FILE}" \
     ${EXTRA_CB_OPTIONS:-} \
