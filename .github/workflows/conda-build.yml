@@ -192,7 +192,7 @@ jobs:
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: ${{ always() && steps.prepare-artifacts.outcome == 'success' && steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH != '' }}
       with:
-        name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}
+        name: test_arti
         path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
         retention-days: 14
         archive: false
