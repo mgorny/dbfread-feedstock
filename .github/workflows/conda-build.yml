@@ -160,7 +160,7 @@ jobs:
         JOB_STATUS: ${{ steps.determine-status.outputs.status }}
         MINIFORGE_HOME: ${{ matrix.tools_install_dir }}
         OS: ${{ matrix.os }}
-        STORE_BUILD_ARTIFACTS: ${{ matrix.STORE_BUILD_ARTIFACTS }}%{ endraw %}
+        STORE_BUILD_ARTIFACTS: ${{ matrix.STORE_BUILD_ARTIFACTS }}
       run: |
         export ARTIFACT_STAGING_DIR="$GITHUB_WORKSPACE"
         export CI_RUN_ID=$GITHUB_RUN_ID
@@ -190,7 +190,7 @@ jobs:
 
     - name: Store conda build artifacts
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: {% raw %}${{ always() && steps.prepare-artifacts.outcome == 'success' && steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH != '' }}
+      if: ${{ always() && steps.prepare-artifacts.outcome == 'success' && steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH != '' }}
       with:
         name: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_NAME }}
         path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
