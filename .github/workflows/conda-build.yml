@@ -201,6 +201,7 @@ jobs:
   upload:
     name: ${{ matrix.CONFIG }}-upload
     needs: build
+    if: ${{ always() && matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 360
     strategy:
@@ -231,7 +232,6 @@ jobs:
         name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}
 
     - name: Upload packages
-      if: ${{ always() && matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
       shell: bash
       env:
         CI: github_actions
