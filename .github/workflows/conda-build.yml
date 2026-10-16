@@ -192,7 +192,7 @@ jobs:
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: ${{ always() && steps.prepare-artifacts.outcome == 'success' && steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH != '' }}
       with:
-        name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}
+        name: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_NAME }}
         path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
         retention-days: 14
         archive: false
@@ -228,7 +228,7 @@ jobs:
     - name: Download conda build artifacts
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}.tar.zst
+        name: ${{ github.run_id }}_${{ github.run_number }}_packages_${{ matrix.CONFIG }}
 
     - name: Upload packages
       if: ${{ matrix.UPLOAD_PACKAGES && github.event_name != 'pull_request' }}
