@@ -14,6 +14,7 @@ fi
 mkdir -p "${CONDA_BLD_PATH}"
 pushd "${CONDA_BLD_PATH}"
 for file in "${FEEDSTOCK_ROOT}"/*.tar.zst; do
+    ls -lR "${file}"
     tar -x -f "${file}"
 done
 popd
