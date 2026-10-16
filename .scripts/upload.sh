@@ -10,6 +10,13 @@
 if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
     return 0
 fi
+
+mkdir -p "${CONDA_BLD_PATH}"
+pushd "${CONDA_BLD_PATH}"
+for file in "${FEEDSTOCK_ROOT}"/*.tar.zst; do
+    tar -x -f "${file}"
+done
+popd
 ( startgroup "Validating outputs" ) 2> /dev/null
 validate_recipe_outputs "${FEEDSTOCK_NAME}"
 ( endgroup "Validating outputs" ) 2> /dev/null
